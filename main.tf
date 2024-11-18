@@ -1,0 +1,31 @@
+module "main" {
+  source                        = "./modules/main"
+  acr_admin_enabled             = true
+  acr_sku                       = "Basic"
+  container_registry_name       = "akarna"
+  custom_domain_name_sa         = "todo.akarna.tech"
+  domain_name                   = "akarna.tech"
+  location                      = azurerm_resource_group.this.location
+  rg_name                       = azurerm_resource_group.this.name
+  storage_ac_name               = "todo"
+  use_custom_domain_sa          = true
+  key_vault_name                = "karnasecret"
+  postgres_server_name          = "karna"
+  postgres_version              = "16"
+  public_network_access_enabled = true
+  storage_mb                    = 32768
+  storage_tier                  = "P4"
+  sku_name                      = "B_Standard_B1ms"
+  ad_auth_enabled               = false
+  password_auth_enabled         = true
+  postgres_zone                 = "3" #This was assigned automatically and tf showed drift. Added later
+  container_name                = "backend"
+  container_app_name            = "todo"
+  container_cpu                 = "0.5"
+  container_environment_name    = "karna-master"
+  container_image               = "akarna.azurecr.io/backend:latest"
+  container_memory              = "1Gi"
+  revision_mode                 = "Single"
+  transport_protocol            = "auto"
+  container_app_domain_name     = "akarna.tech"
+}

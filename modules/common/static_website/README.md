@@ -1,0 +1,1 @@
+# This module creates a static website in a storage account blob and deploys as static website 

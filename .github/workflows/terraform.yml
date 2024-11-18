@@ -1,0 +1,132 @@
+name: Terraform Workflow
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  TF_IN_AUTOMATION: true
+
+jobs:
+    Terraform-Plan:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: 1.5.7
+
+        - name: Authenticate with Azure
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Terraform Format
+          run: terraform fmt -check -recursive
+          continue-on-error: true
+
+        - name: Terraform Validate
+          run: terraform validate
+
+        - name: Terraform Init
+          run: terraform init
+          env:
+            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Terraform Plan
+          id: plan
+          run: terraform plan -out=tfplan -input=false -no-color
+          env:
+            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: generate random delimiter
+          run: echo "DELIMITER=$(uuidgen)" >> $GITHUB_ENV
+
+        - name: truncate terraform plan result
+          run: |
+            echo "PLAN<<${{ env.DELIMITER }}" >> $GITHUB_ENV
+            echo '[maybe truncated]' >> $GITHUB_ENV
+            tail --bytes=65000 <<'${{ env.DELIMITER }}' >> $GITHUB_ENV
+            ${{ format('{0}{1}', steps.plan.outputs.stderr, steps.plan.outputs.stdout) }}
+            ${{ env.DELIMITER }}
+            echo >> $GITHUB_ENV
+            echo "${{ env.DELIMITER }}" >> $GITHUB_ENV
+
+        - name: post plan as sticky comment
+          if: ${{ github.event_name == 'pull_request' }}
+          uses: marocchino/sticky-pull-request-comment@v2
+          with:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            header: plan
+            message: |
+              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+              <details><summary>Show Plan</summary>
+              
+              ```
+              ${{ env.PLAN }}
+              ```
+              
+              </details>
+          continue-on-error: true
+
+        - name: Terraform Plan Status
+          if: ${{ steps.plan.outcome == 'failure' }}
+          run: exit 1
+
+        - name: Upload tfplan artifact
+          if: github.event_name == 'push'
+          uses: actions/upload-artifact@v3
+          with:
+            name: tfplan
+            path: tfplan
+
+    Terraform-Apply:
+      runs-on: ubuntu-latest
+      environment: prod
+      if: github.event_name == 'push'
+
+      needs: Terraform-Plan
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+              terraform_version: 1.5.7
+
+        - name: Authenticate with Azure
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Terraform Init
+          run: terraform init
+          env:
+            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+        - name: Download tfplan artifact
+          uses: actions/download-artifact@v3
+          with:
+            name: tfplan
+            path: .
+
+        - name: Terraform Apply
+          run: terraform apply -input=false tfplan
+          env:
+              TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
