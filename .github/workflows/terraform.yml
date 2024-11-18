@@ -1,18 +1,17 @@
 name: Terraform Workflow
 
-permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
+env:
+  TF_IN_AUTOMATION: true
+  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+  TF_VAR_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+  TF_VAR_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
 on:
   push:
     branches:
       - main
   pull_request:
-
-env:
-  TF_IN_AUTOMATION: true
 
 jobs:
     Terraform-Plan:
@@ -27,21 +26,12 @@ jobs:
           with:
             terraform_version: 1.5.7
 
-        - name: Authenticate with Azure
-          uses: azure/login@v2
-          with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
         - name: Terraform Format
           run: terraform fmt -check -recursive
           continue-on-error: true
 
         - name: Terraform Init
           run: terraform init
-          env:
-            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
         - name: Terraform Validate
           run: terraform validate
@@ -49,8 +39,6 @@ jobs:
         - name: Terraform Plan
           id: plan
           run: terraform plan -out=tfplan -input=false -no-color
-          env:
-            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
         - name: generate random delimiter
           run: echo "DELIMITER=$(uuidgen)" >> $GITHUB_ENV
@@ -108,17 +96,8 @@ jobs:
           with:
               terraform_version: 1.5.7
 
-        - name: Authenticate with Azure
-          uses: azure/login@v2
-          with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
         - name: Terraform Init
           run: terraform init
-          env:
-            TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
         - name: Download tfplan artifact
           uses: actions/download-artifact@v3
@@ -128,5 +107,3 @@ jobs:
 
         - name: Terraform Apply
           run: terraform apply -input=false tfplan
-          env:
-              TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
