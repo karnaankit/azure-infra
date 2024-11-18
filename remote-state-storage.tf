@@ -43,6 +43,6 @@ resource "azurerm_resource_group" "this" {
 }
 
 resource "azurerm_resource_group" "this1" {
-  name     = "master"
+  name     = "master1"
   location = "Australia East"
 }
