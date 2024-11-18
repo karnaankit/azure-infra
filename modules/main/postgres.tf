@@ -30,11 +30,3 @@ module "postgres" {
   admin_password                = sensitive(data.azurerm_key_vault_secret.db_pass.value)
   zone                          = var.postgres_zone
 }
-
-
-resource "azurerm_postgresql_flexible_server_firewall_rule" "this" {
-  end_ip_address   = "255.255.255.255"
-  name             = "AllowAll"
-  server_id        = module.postgres.id
-  start_ip_address = "0.0.0.0"
-}
