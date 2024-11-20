@@ -85,7 +85,7 @@ jobs:
           run: exit 1
 
         - name: Upload tfplan artifact
-          if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+          if: github.event_name == 'pull_request' && github.event.action == 'closed'
           uses: actions/upload-artifact@v4
           with:
             name: tfplan
@@ -94,7 +94,7 @@ jobs:
     Terraform-Apply:
       runs-on: ubuntu-latest
       environment: prod
-      if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed')
+      if: github.event_name == 'pull_request' && github.event.action == 'closed'
 
       needs: Terraform-Plan
       steps:
