@@ -9,11 +9,10 @@ env:
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
     branches:
       - main
-  pull_request:
-    types: [opened, synchronize]
 
 permissions:
   contents: read
@@ -65,7 +64,7 @@ jobs:
             echo "${{ env.DELIMITER }}" >> $GITHUB_ENV
 
         - name: post plan as sticky comment
-          if: ${{ github.event_name == 'pull_request' }}
+          if: github.event_name == 'pull_request' && github.event.action != 'closed'
           uses: marocchino/sticky-pull-request-comment@v2
           with:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,7 +85,7 @@ jobs:
           run: exit 1
 
         - name: Upload tfplan artifact
-          if: github.event_name == 'push'
+          if: github.event_name == 'pull_request' && github.event.action == 'closed'
           uses: actions/upload-artifact@v4
           with:
             name: tfplan
@@ -95,7 +94,7 @@ jobs:
     Terraform-Apply:
       runs-on: ubuntu-latest
       environment: prod
-      if: github.event_name == 'push'
+      if: github.event_name == 'pull_request' && github.event.action == 'closed'
 
       needs: Terraform-Plan
       steps:
