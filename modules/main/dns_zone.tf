@@ -13,7 +13,7 @@ resource "azurerm_dns_cname_record" "this" {
 }
 
 resource "azurerm_dns_a_record" "this" {
-  name                = "@"
+  name                = "api"
   resource_group_name = var.rg_name
   ttl                 = 300
   zone_name           = module.dns_zone.zone_name
@@ -21,7 +21,7 @@ resource "azurerm_dns_a_record" "this" {
 }
 
 resource "azurerm_dns_txt_record" "this" {
-  name                = "asuid"
+  name                = "asuid.api"
   resource_group_name = var.rg_name
   ttl                 = 300
   zone_name           = module.dns_zone.zone_name

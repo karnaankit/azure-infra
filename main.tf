@@ -3,13 +3,13 @@ module "main" {
   acr_admin_enabled             = true
   acr_sku                       = "Basic"
   container_registry_name       = "akarna"
-  custom_domain_name_sa         = "todo.akarna.tech"
-  domain_name                   = "akarna.tech"
+  custom_domain_name_sa         = "todo.mlops.karnaankit.com.np"
+  domain_name                   = "mlops.karnaankit.com.np"
   location                      = azurerm_resource_group.this.location
   rg_name                       = azurerm_resource_group.this.name
   storage_ac_name               = "todo"
   use_custom_domain_sa          = true
-  key_vault_name                = "karnasecret"
+  key_vault_name                = "todosecrets"
   postgres_server_name          = "karna"
   postgres_version              = "16"
   public_network_access_enabled = true
@@ -27,5 +27,5 @@ module "main" {
   container_memory              = "1Gi"
   revision_mode                 = "Single"
   transport_protocol            = "auto"
-  container_app_domain_name     = "akarna.tech"
+  container_app_domain_name     = "api.mlops.karnaankit.com.np"
 }

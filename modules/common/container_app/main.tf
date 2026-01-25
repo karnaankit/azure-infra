@@ -56,6 +56,12 @@ resource "azurerm_container_app" "this" {
         value = var.DB_CLIENT
       }
     }
+    http_scale_rule {
+      concurrent_requests = "10"
+      name                = "http-scaler"
+    }
+    min_replicas = 0
+    max_replicas = 2
   }
   ingress {
     external_enabled = true
