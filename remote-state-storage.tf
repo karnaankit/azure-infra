@@ -38,11 +38,6 @@ resource "azurerm_storage_container" "tfstate" {
 }
 
 resource "azurerm_resource_group" "this" {
-  name     = "master"
-  location = "Australia East"
-}
-
-resource "azurerm_resource_group" "this1" {
-  name     = "master2"
+  name     = "webapp"
   location = "Australia East"
 }
