@@ -42,7 +42,7 @@ resource "azurerm_resource_group" "this" {
   location = "Australia East"
 }
 
-resource "azurerm_resource_group" "this" {
+resource "azurerm_resource_group" "new" {
   name     = "webapp1"
   location = "Australia East"
 }
